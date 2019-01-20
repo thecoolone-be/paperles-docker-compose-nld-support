@@ -7,7 +7,6 @@ services:
         ports:
             # You can adapt the port you want Paperless to listen on by
             # modifying the part before the `:`.
-            # Changed to port 9001
             - "9001:8000"
         #healthcheck:
         #    test: ["CMD", "curl" , "-f", "http://localhost:8000"]
@@ -35,26 +34,26 @@ services:
         restart: always
         depends_on:
             - webserver
-                condition: service_healthy
+                #condition: service_healthy
         volumes:
             - paperless_data:/usr/src/paperless/data:nocopy
             - paperless_media:/usr/src/paperless/media:nocopy
             # You have to adapt the local path you want the consumption
             # directory to mount to by modifying the part before the ':'.
-            - paperless_consume:/usr/src/paperless/consume:nocopy
+            - paperless_consume:/consume:nocopy
             # Likewise, you can add a local path to mount a directory for
             # exporting. This is not strictly needed for paperless to
             # function, only if you're exporting your files: uncomment
             # it and fill in a local path if you know you're going to
             # want to export your documents.
             # - /path/to/another/arbitrary/place:/export
-            - paperless_export:/usr/src/paperless/export:nocopy
-        env_file: docker-compose.env
+            - paperless_export:/export:nocopy
+        #env_file: docker-compose.env
         command: ["document_consumer"]
         environment:
             - USERMAP_UID=1004
             - USERMAP_GID=1004
-
+    
 volumes:
     paperless_data:
         external: true
