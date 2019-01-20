@@ -9,11 +9,11 @@ services:
             # modifying the part before the `:`.
             # Changed to port 9001
             - "9001:8000"
-        healthcheck:
-            test: ["CMD", "curl" , "-f", "http://localhost:8000"]
-            interval: 30s
-            timeout: 10s
-            retries: 5
+        #healthcheck:
+        #    test: ["CMD", "curl" , "-f", "http://localhost:8000"]
+        #    interval: 30s
+        #    timeout: 10s
+        #    retries: 5
         volumes:
             - paperless_data:/usr/src/paperless/data:nocopy
             - paperless_media:/usr/src/paperless/media:nocopy
