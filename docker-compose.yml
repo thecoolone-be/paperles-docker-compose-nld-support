@@ -9,7 +9,7 @@ services:
             # modifying the part before the `:`.
             # Changed to port 9001
             - "9001:8000"
-        #healthcheck:
+        healthcheck:
             test: ["CMD", "curl" , "-f", "http://localhost:8000"]
             interval: 30s
             timeout: 10s
