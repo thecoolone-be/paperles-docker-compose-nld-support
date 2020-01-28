@@ -1,65 +1,68 @@
-version: '2'
+version: '2.1'
 
 services:
     webserver:
-        image: danielquinn/paperless
+        image: "pitkley/paperless"
+        container_name: "paperless-webserver"
+        # uncomment the following line to start automatically on system boot
         restart: always
         ports:
             # You can adapt the port you want Paperless to listen on by
             # modifying the part before the `:`.
-            - "9001:8000"
-        #healthcheck:
-        #    test: ["CMD", "curl" , "-f", "http://localhost:8000"]
-        #    interval: 30s
-        #    timeout: 10s
-        #    retries: 5
+            - "32910:8000"
+        healthcheck:
+            test: ["CMD", "curl" , "-f", "http://localhost:8000"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
         volumes:
-            - paperless_data:/usr/src/paperless/data:nocopy
-            - paperless_media:/usr/src/paperless/media:nocopy
-            - paperless_consume:/consume:nocopy
-            - paperless_export:/export:nocopy
+            - paperless-db:/usr/src/paperless/data
+            - paperless-data:/usr/src/paperless/media
+            # You have to adapt the local path you want the consumption
+            # directory to mount to by modifying the part before the ':'.
+            - paperless-consume:/consume
         env_file: docker-compose.env
         # The reason the line is here is so that the webserver that doesn't do
         # any text recognition and doesn't have to install unnecessary
         # languages the user might have set in the env-file by overwriting the
         # value with nothing.
         environment:
-            - PAPERLESS_OCR_LANGUAGES=nld eng
             - USERMAP_UID=1004
             - USERMAP_GID=1004
-        command: ["runserver", "--insecure", "--noreload", "0.0.0.0:8000"]
+        command: ["gunicorn", "-b", "0.0.0.0:8000"]
 
-    consumer_nld_support:
-        image: danielquinn/paperless
+    consumer:
+        image: "pitkley/paperless"
+        container_name: "paperless-consumer"
+        # uncomment the following line to start automatically on system boot
         restart: always
         depends_on:
-            - webserver
-                #condition: service_healthy
+            webserver:
+                condition: service_healthy
         volumes:
-            - paperless_data:/usr/src/paperless/data:nocopy
-            - paperless_media:/usr/src/paperless/media:nocopy
-            # You have to adapt the local path you want the consumption
-            # directory to mount to by modifying the part before the ':'.
-            - paperless_consume:/consume:nocopy
+            - paperless-db:/usr/src/paperless/data
+            - paperless-data:/usr/src/paperless/media
+            # This should be set to the same value as the consume directory
+            # in the webserver service above.
+            - paperless-consume:/consume
             # Likewise, you can add a local path to mount a directory for
             # exporting. This is not strictly needed for paperless to
             # function, only if you're exporting your files: uncomment
             # it and fill in a local path if you know you're going to
             # want to export your documents.
-            # - /path/to/another/arbitrary/place:/export
-            - paperless_export:/export:nocopy
-        #env_file: docker-compose.env
-        command: ["document_consumer"]
+            - paperless-export:/export
+        env_file: docker-compose.env
+        command: ["document_consumer", "--no-inotify"]
         environment:
             - USERMAP_UID=1004
             - USERMAP_GID=1004
-    
+
 volumes:
-    paperless_data:
-        external: true
-    paperless_consume:
-        external: true
-    paperless_media:
-        external: true
-    paperless_export:
-        external: true
+    paperless-db:
+      external: true
+    paperless-data:
+      external: true
+    paperless-consume:
+      external: true
+    paperless-export:
+      external: true
